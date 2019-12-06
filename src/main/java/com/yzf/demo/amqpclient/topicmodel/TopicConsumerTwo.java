@@ -1,8 +1,6 @@
 package com.yzf.demo.amqpclient.topicmodel;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.*;
 import com.yzf.demo.amqpclient.MQConnectUtil;
 
 import java.io.IOException;
@@ -26,7 +24,7 @@ public class TopicConsumerTwo {
         channel.queueBind(QUEUE_NAME,EXCHANGE_NAME,"msg.#");
         channel.basicQos(1);
 
-        QueueingConsumer consumer = new QueueingConsumer(channel);
+        /*QueueingConsumer consumer = new QueueingConsumer(channel);
         channel.basicConsume(QUEUE_NAME,false,consumer);
 
         while (true){
@@ -35,6 +33,15 @@ public class TopicConsumerTwo {
             System.out.println(" [x] Received '" + message + "'");
             Thread.sleep(10);
             channel.basicAck(delivery.getEnvelope().getDeliveryTag(),false);
-        }
+        }*/
+
+        channel.basicConsume(QUEUE_NAME,false,new DefaultConsumer(channel){
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body,"UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+                channel.basicAck(envelope.getDeliveryTag(), false);
+            }
+        });
     }
 }
